@@ -164,6 +164,7 @@ parser.add_argument("-p",type=int,default=0,help="Scanning all ports")
 parser.add_argument("--output",   help="Save scan results to a file (txt or json)")
 parser.add_argument("--S",action="store_true",help="Sleath Scan")
 parser.add_argument("--subnet",help="Scan whole subnet")
+parser.add_argument("--about", action="store_true", help=argparse.SUPPRESS)
 args = parser.parse_args()
 target = None
 
@@ -201,4 +202,8 @@ if args.subnet:
         scan(target,start_port,end_port,max_workers)
 else:
     scan(target, start_port, end_port, max_workers)
+if args.about:
+    print("Built to understand networks, not just scan them. — AK")
+    sys.exit(0)    
+    
 
