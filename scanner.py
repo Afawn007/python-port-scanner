@@ -165,6 +165,7 @@ parser.add_argument("--output",   help="Save scan results to a file (txt or json
 parser.add_argument("--S",action="store_true",help="Sleath Scan")
 parser.add_argument("--subnet",help="Scan whole subnet")
 parser.add_argument("--about", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("--own",help="Ye chu banovmut by Afawn")
 args = parser.parse_args()
 target = None
 
