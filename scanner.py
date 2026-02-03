@@ -15,7 +15,7 @@ def probe_http(sock, host): # ye chu to get banners from http services
     request = (
         f"HEAD / HTTP/1.1\r\n"
         f"Host: {host}\r\n"
-        f"User-Agent: FastPortScanner\r\n"
+        f"User-Agent:FastPortScanner (+https://github.com/Afawn007/python-port-scanner)\r\n"
         f"Connection: close\r\n\r\n"
     )
     sock.sendall(request.encode())
