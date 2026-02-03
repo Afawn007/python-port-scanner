@@ -11,6 +11,13 @@ A Python-based TCP port scanner with support for:
 - Detect open and closed TCP ports
 - Works on localhost, LAN, and remote hosts
 - Uses ARP for reliable LAN host discovery
+ ## Platform Support
+
+- Linux: Full support
+- macOS: Full support (requires root)
+- Windows:
+  - TCP connect scan supported
+  - SYN scan and subnet discovery not supported
 
 - ## Requirements
 
