@@ -20,7 +20,19 @@ A Python-based TCP port scanner with support for:
 Disclaimer
 This tool is intended for educational purposes and authorized security testing only.
 Do not scan systems you do not own or have permission to test.
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Afawn007/python-port-scanner.git
+cd python-port-scanner
+
+
+
+
 ## Usage
+
 
 Scan a single host:
 ```bash
