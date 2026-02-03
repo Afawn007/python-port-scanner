@@ -16,7 +16,10 @@ A Python-based TCP port scanner with support for:
 - Python 3
 - Scapy
 - Root privileges for SYN scan and subnet scan
-
+  
+Disclaimer
+This tool is intended for educational purposes and authorized security testing only.
+Do not scan systems you do not own or have permission to test.
 ## Usage
 
 Scan a single host:
