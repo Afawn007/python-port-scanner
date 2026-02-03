@@ -12,10 +12,19 @@ A Python-based TCP port scanner with support for:
 - Works on localhost, LAN, and remote hosts
 - Uses ARP for reliable LAN host discovery
 
-## Requirements
-- Python 3
+- ## Requirements
+
+- Python 3.9+
 - Scapy
-- Root privileges for SYN scan and subnet scan
+- Linux or macOS (raw packet support required)
+- Root privileges for:
+  - SYN (stealth) scan
+  - Subnet (ARP) scan
+  ## Installation
+
+```bash
+pip install scapy
+```
   
 Disclaimer
 This tool is intended for educational purposes and authorized security testing only.
