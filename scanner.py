@@ -126,7 +126,7 @@ def scan(target,start_port,end_port,max_workers):
             for j in results:
                 if j[3] is False:
                     count +=1
-            print(f"{count} ports are closed")
+            print(f"{count} ports are either closed or filtered")
     except KeyboardInterrupt:
         sys.exit()
 def format_port_results(results):# ye chu for looks
