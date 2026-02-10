@@ -63,7 +63,7 @@ def sleath_scan(target,port):# ye chu stealth scan function
         rst=IP(dst=target)/TCP(sport=src_port,dport=port,flags="R")# this is end connection ack packet
         send(rst,verbose=False)# we send close connection
         return port, "", "", "open"# if port is open return open
-    elif res and res.haslayer(TCP) and res[TCP].flags == 0x14 or 0x04:
+    elif res and res.haslayer(TCP) and res[TCP].flags in (0x14, 0x04):
         return port, "", "", "closed" 
     return port, "", "", "filtered"# return closed if port is closed
 def scan_port(target,port):
