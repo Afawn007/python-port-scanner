@@ -43,6 +43,7 @@ def probe_https(sock, host): # ye chu to get banners for https services
         "Connection: close\r\n"
         "\r\n")
     secure_socket.sendall(request.encode())
+    secure_socket.settimeout(2)
     response=b''
     while True:
         data = secure_socket.recv(4096)
