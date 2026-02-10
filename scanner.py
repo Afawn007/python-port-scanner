@@ -6,7 +6,7 @@ import ssl # ye chu for tls handshake and banner grabbing https banner
 from scapy.all import  sr1, RandShort, send ,srp, ARP# ye chu for stealth scan s means send r means recieve and 1 means only 1
 from scapy.layers.inet import IP, TCP , Ether# dk why i was unable to import them in scapy.all
 import os # ye chu to check root previlidges
-
+import errno #te chu deal kran for filtered errors in dropped packets
 
 RED = "\033[91m"  # yim che colour
 GREEN = "\033[92m"
@@ -62,8 +62,8 @@ def sleath_scan(target,port):# ye chu stealth scan function
         # first we check res cha ti kin na . Then we check res manz cha tcp response and at last we check response in syn ack . In binary it is 0x12
         rst=IP(dst=target)/TCP(sport=src_port,dport=port,flags="R")# this is end connection ack packet
         send(rst,verbose=False)# we send close connection
-        return port, "", "", True# if port is open return true
-    return port, "", "", False# return false if port is closed
+        return port, "", "", "open"# if port is open return open
+    return port, "", "", "closed"# return closed if port is closed
 def scan_port(target,port):
     sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.settimeout(1)
@@ -83,11 +83,17 @@ def scan_port(target,port):
                         banner =get_banner(sock)
                 except :
                     banner=''
-                return port,service,banner,True
+                return port,service,banner,"open"
         else:
             return port,'','',False
+        elif result == errno.ECONNREFUSED:
+            return port, "", "", "closed"
+        elif result in (errno.ETIMEDOUT, errno.EHOSTUNREACH, errno.ENETUNREACH):
+            return port, "", "", "filtered"
+        else:
+            return port, "", "", "filtered"    
     except socket.error:
-        return port,'','',False
+        return port,'','',"filtered"
     finally:
         sock.close()
 
@@ -124,9 +130,14 @@ def scan(target,start_port,end_port,max_workers):
             print(format_port_results(results))
             count=0
             for j in results:
-                if j[3] is False:
+                if j[3]=="closed" :
                     count +=1
-            print(f"{count} ports are either closed or filtered")
+            print(f"{count} ports are closed")
+            filtered=0
+            for i in results:
+                if i[3]=="filtered":
+                    filtered+=1
+            print(f"{filtered} ports are filtered")
     except KeyboardInterrupt:
         sys.exit()
 def format_port_results(results):# ye chu for looks
@@ -137,7 +148,7 @@ def format_port_results(results):# ye chu for looks
     # Sort results by port number
     results.sort(key=lambda x: x[0])
     for port,service,banner,success in results:
-        if success:
+        if success == "open":
             formatted_results+=f"{RED} {port:<8} {service:<15} {'Open':<8}{RESET} \n"
             if banner:
                 banner_lines = banner.split('\n')
