@@ -63,7 +63,9 @@ def sleath_scan(target,port):# ye chu stealth scan function
         rst=IP(dst=target)/TCP(sport=src_port,dport=port,flags="R")# this is end connection ack packet
         send(rst,verbose=False)# we send close connection
         return port, "", "", "open"# if port is open return open
-    return port, "", "", "closed"# return closed if port is closed
+    elif res[TCP].flags == 0x14:
+        return port, "", "", "closed" 
+    return port, "", "", "filtered"# return closed if port is closed
 def scan_port(target,port):
     sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.settimeout(1)
@@ -84,8 +86,6 @@ def scan_port(target,port):
                 except :
                     banner=''
                 return port,service,banner,"open"
-        else:
-            return port,'','',False
         elif result == errno.ECONNREFUSED:
             return port, "", "", "closed"
         elif result in (errno.ETIMEDOUT, errno.EHOSTUNREACH, errno.ENETUNREACH):
@@ -160,7 +160,7 @@ def output_file(results,output):
         f.write("Port Scanning Results:\n")
         f.write("-"*85+"\n")
         for port,service,banner,success in results:
-            if success:
+            if success =="open":
                 f.write(f"{port} {service} Open\n")
                 if banner:
                     for line in banner.split('\n'):
