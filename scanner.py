@@ -120,7 +120,7 @@ def sleath_scan(target, port):  # ye chu stealth scan function
         # first we check res cha ti kin na . Then we check res manz cha tcp response and at last we check response in syn ack . In binary it is 0x12
         rst = IP(dst=target) / TCP(sport=src_port, dport=port, flags="R")  # this is end connection ack packet
         send(rst, verbose=False)  # we send close connection
-        service = get_service(port)
+        service = socket.getservbyport(port, "tcp")
         return port, service, "", "open"  # if port is open return open
     elif res and res.haslayer(TCP) and res[TCP].flags in (0x14, 0x04):
         return port, "", "", "closed"
@@ -224,7 +224,7 @@ def output_file(results, output):
                 if banner:
                     for line in banner.split("\n"):
                         f.write(f"         {line}\n")
-            print(f"[+] Results saved to {output}")
+    print(f"[+] Results saved to {output}")
 
 def parser_ok():
     p = argparse.ArgumentParser(
@@ -255,12 +255,12 @@ def main():
     if not args.subnet and not args.target_input:
         print(" You must provide a target host or use --subnet")
         sys.exit(1)
-
-    try:
-            target = socket.gethostbyname(args.target_input)
-    except socket.gaierror:
-            print("Hostname could not be resolved")
-            sys.exit(1)
+    if args.target_input:
+        try:
+                target = socket.gethostbyname(args.target_input)
+        except socket.gaierror:
+                print("Hostname could not be resolved")
+                sys.exit(1)
     if args.p:
         start_port = 1
         end_port = 65535
