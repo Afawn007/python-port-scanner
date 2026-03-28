@@ -10,6 +10,7 @@ from scapy.all import ICMP
 from scapy.layers.inet import UDP
 import os  # ye chu to check root previlidges
 import errno  # te chu deal kran for filtered errors in dropped packets
+import ipaddress # for arp scanning
 
 RED = "\033[91m"  # yim che colour
 GREEN = "\033[92m"
@@ -31,6 +32,11 @@ def probe_http(sock, host):  # ye chu to get banners from http services
 
 
 def arp_scan(cidr):
+     try:
+        ipaddress.ip_network(cidr, strict=False)
+    except ValueError:
+        print(f"[!] Invalid CIDR: {cidr}")
+        sys.exit(1)
     arp_request = ARP(pdst=cidr)
     broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
     packet = broadcast / arp_request
