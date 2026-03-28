@@ -10,29 +10,44 @@ from scapy.all import ICMP
 from scapy.layers.inet import UDP
 import os  # ye chu to check root previlidges
 import errno  # te chu deal kran for filtered errors in dropped packets
-import ipaddress # for arp scanning
+import ipaddress # For arp scanning
 
 RED = "\033[91m"  # yim che colour
 GREEN = "\033[92m"
 RESET = "\033[0m"
 
 
-def probe_http(sock, host):  # ye chu to get banners from http services
+def probe_http(ip,host,port=80):  # ye chu to get banners from http services
     request = (
         f"HEAD / HTTP/1.1\r\n"
         f"Host: {host}\r\n"
-        f"User-Agent:FastPortScanner (+https://github.com/Afawn007/python-port-scanner)\r\n"
-        f"Connection: close\r\n\r\n"
+        f"User-Agent: Mozilla/5.0 \r\n"
+        f"Connection: close\r\n"
+        f"Accept: text/html\r\n"
+        f"Accept-Language: en-US\r\n"
+         f"\r\n"
     )
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)
     try:
+        sock.connect((ip, port))
         sock.sendall(request.encode())
-        return sock.recv(4096).decode(errors="ignore").strip()  # ye ker return value into banner
+        response = b""
+        while True:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            response += chunk
+            if b"\r\n\r\n" in response:
+                break
+        return response.decode(errors="ignore").strip()
     except (socket.timeout, OSError):
         return ""
-
-
+    finally:
+        sock.close()
+ 
 def arp_scan(cidr):
-     try:
+    try:
         ipaddress.ip_network(cidr, strict=False)
     except ValueError:
         print(f"[!] Invalid CIDR: {cidr}")
@@ -48,7 +63,7 @@ def arp_scan(cidr):
     return clients
 
 
-def probe_https(sock, host):  # ye chu to get banners for https services
+def probe_https(ip, host):  # ye chu to get banners for https services
     # HTTPS manz chu pehlay TLS handshake zaroori
     context = ssl.create_default_context()  # TLS context banao . Like es kyah rules ker set
     context.check_hostname = False  # Certificate verification band (scanner behavior)
@@ -57,13 +72,16 @@ def probe_https(sock, host):  # ye chu to get banners for https services
     sock_2.settimeout(2)
     secure_socket = None
     try:
-        sock_2.connect((host, 443))
+        sock_2.connect((ip, 443))
         secure_socket = context.wrap_socket(sock_2, server_hostname=host)  # TCP socket keriv TLS manz wrap
         request = ("HEAD / HTTP/1.1\r\n"
                    f"Host: {host}\r\n"
-                   "User-Agent: FastPortScanner\r\n"
+                   "User-Agent: Mozilla/5.0\r\n"
                    "Connection: close\r\n"
-                   "\r\n")
+                   "Accept: text/html\r\n"
+                   "Accept-Language: en-US\r\n"
+                   f"\r\n")
+
         secure_socket.sendall(request.encode())
         secure_socket.settimeout(2)
         response = b''
@@ -72,6 +90,8 @@ def probe_https(sock, host):  # ye chu to get banners for https services
             if not data:
                 break
             response += data
+            if b"\r\n\r\n" in response:
+                break
         return response.decode(errors="ignore").strip()
     except (ssl.SSLError, socket.timeout):
         return ""
@@ -133,7 +153,8 @@ def sleath_scan(target, port):  # ye chu stealth scan function
     return port, "", "", "filtered"  # return closed if port is closed
 
 
-def scan_port(target, port):
+def scan_port(target, port ,hostname=None):
+    host_header = hostname or target
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(1)
     try:
@@ -145,9 +166,9 @@ def scan_port(target, port):
                 service = "unknown"
             try:
                 if port in (80, 8080):
-                    banner = probe_http(sock, target)
+                    banner = probe_http(target,host_header,port)
                 elif port == 443:
-                    banner = probe_https(sock, target)
+                    banner = probe_https(target,host_header)
                 else:
                     banner = get_banner(sock)
             except Exception:
@@ -165,13 +186,13 @@ def scan_port(target, port):
         sock.close()
 
 
-def scan(target, start_port, end_port, max_workers , sleath=False, udp=False, output=None):
+def scan(target, start_port, end_port, max_workers , sleath=False, udp=False, output=None ,hostname=None):
     if sleath:
         scan_fn = lambda p: sleath_scan(target, p)
     elif udp:
         scan_fn = lambda p: udp_scan(target, p)
     else:
-        scan_fn = lambda p: scan_port(target, p)
+        scan_fn = lambda p: scan_port(target, p ,hostname)
     print(f"Scanning {target}")
     results = []
     total = end_port - start_port + 1
@@ -257,12 +278,14 @@ def main():
         print("You must have root privileges for slealth scan")
         sys.exit(1)  # 1 means error occured and exit code
     target = None
+    hostname = None
 
     if not args.subnet and not args.target_input:
         print(" You must provide a target host or use --subnet")
         sys.exit(1)
     if args.target_input:
         try:
+                hostname=args.target_input
                 target = socket.gethostbyname(args.target_input)
         except socket.gaierror:
                 print("Hostname could not be resolved")
@@ -289,9 +312,9 @@ def main():
             sys.exit(0)
         print(f"[+] Found {len(clients)} live host(s): {', '.join(clients)}")
         for target in clients:
-            scan(target, start_port, end_port, max_workers, sleath=args.S, udp=args.U, output=args.output)
+            scan(target, start_port, end_port, max_workers, sleath=args.S, udp=args.U, output=args.output ,hostname=target)
     else:
-        scan(target, start_port, end_port, max_workers,sleath=args.S, udp=args.U, output=args.output)
+        scan(target, start_port, end_port, max_workers,sleath=args.S, udp=args.U, output=args.output ,hostname=hostname)
 
 if __name__ == "__main__":
     main()
