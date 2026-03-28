@@ -50,7 +50,7 @@ def arp_scan(cidr):
     try:
         ipaddress.ip_network(cidr, strict=False)
     except ValueError:
-        print(f"[!] Invalid CIDR: {cidr}")
+        print(f"Invalid CIDR: {cidr}")
         sys.exit(1)
     arp_request = ARP(pdst=cidr)
     broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -109,9 +109,8 @@ def get_banner(sock):
 
 def udp_scan(target, port):
     """
-    UDP scan using Scapy.
-    open|filtered  — no response (UDP is stateless; silence ≠ closed)
-    closed         — ICMP port-unreachable received
+    open|filtered no response (UDP is stateless; silence ≠ closed)
+    closed ICMP port-unreachable received
     Requires root.
     """
     pkt = IP(dst=target) / UDP(dport=port) # Es che packet banawan
@@ -188,7 +187,7 @@ def scan_port(target, port ,hostname=None):
 
 def scan(target, start_port, end_port, max_workers , sleath=False, udp=False, output=None ,hostname=None):
     if sleath:
-        scan_fn = lambda p: sleath_scan(target, p)
+        scan_fn = lambda p: sleath_scan(target, p) # lambda input : output      liike a small functio 
     elif udp:
         scan_fn = lambda p: udp_scan(target, p)
     else:
